@@ -1,0 +1,108 @@
+# --- Python ---
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# --- Distribution / Packaging ---
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# --- PyInstaller / Nuitka ---
+*.manifest
+*.spec
+*.build/
+*.dist/
+
+# --- Unit test / coverage ---
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.dmypy.json
+dmypy.json
+
+# --- Virtual envs ---
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# --- IDEs / Editors ---
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# --- Logs ---
+*.log
+sege.log
+logs/
+
+# --- Project-specific user state (auto-created at runtime, never committed) ---
+# The app keeps everything self-contained under segesource/, so runtime
+# files appear there. We ignore them but tracked code stays committed.
+segesource/gui_settings.json
+segesource/segesource.log*
+segesource/buff.json
+segesource/single.json
+segesource/priest_goat_config.json
+segesource/farm_data/
+segesource/narki_data/
+# Catch-all in case the user runs the script from a different CWD
+settings.json
+gui_settings.json
+buff.json
+single.json
+priest_goat_config.json
+farm_data/
+narki_data/
+
+# --- Runtime image captures (user-generated, never committed) ---
+login_images/
+notification_images/
+segesource/login_images/
+segesource/notification_images/
+
+# --- Native runtime artifacts (installed locally, not in repo) ---
+# interception.dll comes from the Interception driver install, never committed
+*.dll
+*.pyd
+*.exe
+
+# --- Misc ---
+*.bak
+*.tmp
+.tmp/
