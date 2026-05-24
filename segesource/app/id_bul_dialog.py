@@ -505,10 +505,16 @@ class IdBulDialog(QDialog):
                 json.dump(cfg, f, indent=4, ensure_ascii=False)
 
             # clicksend.reload_device_ids → mevcut Driver instance'lari yeni ID ile
-            new_kb = new_ms = None
+            # SEGESOURCE varyanti None dondurur (sadece cache temizler);
+            # SEGECLAUDE varyanti (new_kb, new_ms) tuple dondurur. Ikisini de
+            # destekle ki dialog her iki build'de de calissin.
+            new_kb = self.selected_keyboard_id
+            new_ms = self.selected_mouse_id
             if reload_device_ids is not None:
                 try:
-                    new_kb, new_ms = reload_device_ids()
+                    result = reload_device_ids()
+                    if isinstance(result, tuple) and len(result) == 2:
+                        new_kb, new_ms = result
                 except Exception as e:
                     QMessageBox.warning(self, "Uyari",
                                         f"Ayar yazildi ama runtime reload basarisiz: {e}\n"
@@ -526,39 +532,24 @@ class IdBulDialog(QDialog):
             QMessageBox.critical(self, "Hata", f"Kaydetme hatasi: {e}")
 
     def test_send_key(self):
-        """5 sn icinde aktif pencereye 'A' tusu gonder + drop sebebini raporla.
-        secure_send'in 3 gate'i (DLL permission, lease, target) tek tek
-        kontrol edilir; hangisi blokluyorsa user gorur.
+        """5 sn icinde aktif pencereye 'A' tusu gonder + sonucu raporla.
+
+        SEGESOURCE (open-source build) icinde secure_send'in TEK gate'i var:
+        `_is_target_active()` (opsiyonel foreground-window filter). Eski
+        closed-source build'in DLL permission ve heartbeat lease gate'leri
+        bu build'de YOK — kaldirildilar, kontrol etmek yanlis teshis verir.
 
         AUDIT-2026-05 Round 9: UI freeze fix — time.sleep(5) yerine
         QTimer.singleShot(5000) ile event loop bloklanmiyor.
         """
         try:
-            # AUDIT-2026-05 Round 8 FIX: Nuitka obfuscator `from clicksend
-            # import X` sembollerini renaming yapinca ImportError veriyordu.
-            # Modulu direct import + getattr ile dirençli oku.
-            # AUDIT-2026-05 Round 9 FIX: build_rename.py `core_dll`/`_lease_ok`/
-            # `_is_target_active` sembollerini build'de rastgele rename ediyor.
-            # getattr+string literal o ismi bulamiyordu. Direct dot access ile
-            # AST-uyumlu erişim — id_bul_dialog.py artik TARGET_FILES'da, bu
-            # dosyada da rename yapilacak → semboller eslesir.
             import clicksend as _cs
-            try:
-                core_dll = _cs.core_dll
-            except AttributeError:
-                core_dll = None
-            try:
-                _lease_ok = _cs._lease_ok
-            except AttributeError:
-                _lease_ok = lambda: True
+            # SEGESOURCE'da `_is_target_active` modulun ic fonksiyonu;
+            # AttributeError olursa fail-OPEN (her zaman izin var say).
             try:
                 _is_target_active = _cs._is_target_active
             except AttributeError:
                 _is_target_active = lambda: True
-            try:
-                _drop_counters = _cs._drop_counters
-            except AttributeError:
-                _drop_counters = {}
             try:
                 KeyboardDriver = _cs.KeyboardDriver
             except AttributeError:
@@ -568,28 +559,18 @@ class IdBulDialog(QDialog):
                                      "clicksend.KeyboardDriver bulunamadi (build problemi).")
                 return
 
-            # Gate diagnostics — secure_send'in gercek karari
+            # Gate diagnostics — SADECE SEGESOURCE'da gercekten var olan gate
             reasons = []
-            if core_dll is None:
-                reasons.append("core_dll yok (DLL yuklenememis)")
-            else:
-                try:
-                    perm = bool(core_dll.CheckPermission())
-                except Exception as e:
-                    reasons.append(f"CheckPermission exception: {e}")
-                    perm = None
-                if perm is False:
-                    reasons.append("CheckPermission() False (bilet/lisans)")
-            if not _lease_ok():
-                reasons.append("_lease_ok False (heartbeat lease eskimis)")
             if not _is_target_active():
-                reasons.append("_is_target_active False (oyun filtresi aktif, hedef pencere onde degil)")
+                reasons.append(
+                    "Foreground filter aktif (Sistem Ayarlari'nda "
+                    "'Sadece oyun ondeyken tus gonder' acik) ve hedef "
+                    "pencere onde degil."
+                )
 
             # Closure state — _do_test_send_actual icin sakla
             self._test_reasons = reasons
-            self._test_cs = _cs
             self._test_KeyboardDriver = KeyboardDriver
-            self._test_drop_counters = _drop_counters
 
             self.status.setText("5 sn icinde Notepad/oyun penceresini onal — A tusu gidecek...")
             self.btn_test_key.setEnabled(False)
@@ -606,17 +587,11 @@ class IdBulDialog(QDialog):
         loop-safe iki adim: stroke + (300ms sonra) followup rapor.
         """
         try:
-            reasons = getattr(self, "_test_reasons", [])
             KeyboardDriver = getattr(self, "_test_KeyboardDriver", None)
-            _drop_counters = getattr(self, "_test_drop_counters", {})
             if KeyboardDriver is None:
                 QMessageBox.critical(self, "Test Hatasi", "KeyboardDriver yok (state kayip).")
                 self.btn_test_key.setEnabled(True)
                 return
-
-            # Drop counter snapshot before
-            _before = dict(_drop_counters)
-            self._test_before = _before
 
             try:
                 drv = KeyboardDriver()
@@ -626,7 +601,7 @@ class IdBulDialog(QDialog):
                 self.btn_test_key.setEnabled(True)
                 return
 
-            # 300ms drop counter update'i bekle — UI event loop calismaya devam.
+            # 300ms sonra rapor — UI event loop calismaya devam.
             QTimer.singleShot(300, self._do_test_send_followup)
         except Exception as e:
             QMessageBox.critical(self, "Test Hatasi", f"{e}")
@@ -636,35 +611,29 @@ class IdBulDialog(QDialog):
                 pass
 
     def _do_test_send_followup(self):
-        """R13: 300ms sonra calisan rapor uretici (eski blocking sleep)."""
+        """R13: 300ms sonra calisan rapor uretici (eski blocking sleep).
+
+        SEGESOURCE'da drop counter telemetri yok; sonucu kullanici gozuyle
+        dogrular ("A yazildi mi?"). Yazilmadiysa olasi sebepler:
+        1) Yanlis keyboard_id (default=1, gercek klavyen baska device)
+        2) Interception driver yuklu degil / servisi durmus
+        3) Oyun admin calisiyor, SEGESOURCE degil (UAC mismatch)
+        """
         try:
             reasons = getattr(self, "_test_reasons", [])
-            _drop_counters = getattr(self, "_test_drop_counters", {})
-            _before = getattr(self, "_test_before", {})
-
-            _after = dict(_drop_counters)
-            delta = {k: _after.get(k, 0) - _before.get(k, 0) for k in _after}
-            blocked = {k: v for k, v in delta.items() if v > 0}
-
             msg = "TEST SONUCU\n\n"
-            if not reasons and not blocked:
-                msg += "✅ Tum gate'ler OK, stroke gonderildi.\n"
-                msg += "Pencerene 'A' yazildi mi? Yazildiysa cihaz ID dogru.\n"
-                msg += "Yazilmadiysa: yanlis device ID (id_bul'da farkli klavye sec)."
+            if not reasons:
+                msg += "✅ Stroke gonderildi (gate yok / acik).\n\n"
+                msg += "Pencerene 'A' yazildi mi?\n"
+                msg += "  • Yazildiysa → cihaz ID dogru, sistem calisiyor.\n"
+                msg += "  • Yazilmadiysa muhtemel sebep:\n"
+                msg += "      1) Yanlis keyboard_id → bu dialog'da klavye sec + KAYDET\n"
+                msg += "      2) Interception driver yuklu degil / servisi kapali\n"
+                msg += "      3) Oyun admin calisiyor, SEGESOURCE admin degil"
             else:
-                msg += "❌ secure_send BLOK ETTI:\n"
-                if reasons:
-                    for r in reasons:
-                        msg += f"  • {r}\n"
-                if blocked:
-                    msg += f"\nDrop counter delta: {blocked}\n"
-                msg += "\nNeden:\n"
-                if "perm_false" in blocked or any("CheckPermission" in r for r in reasons):
-                    msg += "  → DLL bileti kapali. Login response'taki score/ticket DLL'e set edilmemis."
-                if "lease" in blocked or any("lease" in r for r in reasons):
-                    msg += "  → Heartbeat lease eskimis. Server baglantisi kayip mi?"
-                if "target" in blocked or any("target" in r for r in reasons):
-                    msg += "  → Pencere filtresi aktif. Sistem Ayarlari'ndan 'Sadece oyun ondeyken' tikini kaldir."
+                msg += "❌ Stroke gonderilmedi:\n"
+                for r in reasons:
+                    msg += f"  • {r}\n"
             QMessageBox.information(self, "Tus Test Sonucu", msg)
             self.status.setText("Test tamamlandi.")
         except Exception as e:
