@@ -57,10 +57,101 @@ def _configure_stdout_encoding() -> None:
                 pass
 
 
+def _is_admin() -> bool:
+    """EN: True iff the current process holds Windows admin (elevated) rights.
+        Non-Windows platforms return True (no elevation concept used here).
+    TR: Mevcut process Windows admin (yükseltilmiş) yetkisine sahip mi?
+        Windows dışında True döner (burada yükseltme kavramı yok)."""
+    if sys.platform != "win32":
+        return True
+    try:
+        import ctypes
+        return bool(ctypes.windll.shell32.IsUserAnAdmin())
+    except Exception:
+        return False
+
+
+def _relaunch_as_admin() -> bool:
+    """EN: Re-launch THIS script under UAC elevation via ShellExecuteW
+        with the "runas" verb. Returns True on successful elevation (caller
+        should sys.exit immediately so the elevated child takes over).
+        Returns False if the user denied UAC or the call failed — caller
+        should continue un-elevated so the app at least starts (the user
+        will see that key sending into admin games is blocked).
+    TR: Bu scripti UAC yükseltmesi altında ShellExecuteW "runas" verb'ü
+        ile yeniden başlatır. Başarılı yükseltmede True döner (çağıran
+        hemen sys.exit etmeli; yükseltilmiş çocuk devralır). UAC reddi
+        veya hata durumunda False — çağıran yükseltilmemiş devam etmeli
+        (uygulama açılsın, kullanıcı admin oyuna tuş gitmediğini görsün)."""
+    if sys.platform != "win32":
+        return False
+    try:
+        import ctypes
+        # EN: Quote each argv element so paths with spaces survive intact.
+        # TR: Boşluklu yolların bozulmaması için her argv elemanını alıntıla.
+        params = " ".join(f'"{a}"' for a in sys.argv)
+        rc = ctypes.windll.shell32.ShellExecuteW(
+            None,            # parent hwnd / üst pencere yok
+            "runas",         # verb → UAC tetikler
+            sys.executable,  # python.exe
+            params,          # original argv as one string
+            None,            # working dir = inherit
+            1,               # SW_SHOWNORMAL
+        )
+        # EN: ShellExecuteW returns > 32 on success; <= 32 means error.
+        # TR: ShellExecuteW başarıda > 32 döner; <= 32 hata demektir.
+        return int(rc) > 32
+    except Exception:
+        return False
+
+
+def _ensure_admin_or_exit() -> None:
+    """EN: If not already elevated, spawn an elevated copy and exit the
+        current (un-elevated) process. If elevation fails (user clicks
+        "No" on UAC) we fall through and continue — the app still starts
+        but key sending into admin-protected games will be silently
+        blocked by Windows UIPI. The user can opt out of this behaviour
+        by setting `SEGE_SKIP_ELEVATION=1` in the environment.
+    TR: Henüz yükseltilmemişsek, yükseltilmiş bir kopya açıp şu anki
+        (yükseltilmemiş) process'i kapat. Yükseltme başarısız olursa
+        (UAC'da "Hayır" tıklanırsa) düşüp devam ediyoruz — uygulama
+        açılır ama admin korumalı oyunlara tuş gönderimi Windows UIPI
+        tarafından sessizce engellenir. `SEGE_SKIP_ELEVATION=1` ortam
+        değişkeniyle bu davranış devre dışı bırakılabilir."""
+    if os.environ.get("SEGE_SKIP_ELEVATION"):
+        return
+    if _is_admin():
+        return
+    if _relaunch_as_admin():
+        # EN: Elevated child took over — quit the un-elevated parent silently.
+        # TR: Yükseltilmiş çocuk devraldı — yükseltilmemiş ebeveyni sessizce kapat.
+        sys.exit(0)
+    # EN: UAC denied / failed — log and let main() continue un-elevated.
+    # TR: UAC reddedildi / hata — logla ve main() yükseltilmemiş devam etsin.
+    try:
+        sys.stderr.write(
+            "[SEGE] UAC elevation failed/denied; running un-elevated. "
+            "Key sending into admin games will be blocked.\n"
+        )
+    except Exception:
+        pass
+
+
 def main() -> None:
     """EN: Application entry point.
     TR: Uygulama giriş noktası."""
     _configure_stdout_encoding()
+    # EN: Try to acquire admin rights FIRST — Interception kernel-mode
+    #     driver itself works either way, but Windows UIPI blocks
+    #     synthetic input from a low-IL process targeting a high-IL
+    #     process (admin game). Without elevation, tuş gönderimi fails
+    #     silently and looks like a config bug.
+    # TR: ÖNCE admin yetkisini almayı dene — Interception kernel-mode
+    #     sürücüsü zaten çalışır, ama Windows UIPI düşük-bütünlük bir
+    #     process'ten yüksek-bütünlük process'e (admin oyun) sentetik
+    #     girdiyi engeller. Yükseltme olmadan tuş gönderimi sessizce
+    #     başarısız olur ve config hatası gibi görünür.
+    _ensure_admin_or_exit()
 
     # EN: Logger first so any later import-time crash is captured.
     # TR: Önce logger — sonraki import çökmeleri de yakalansın.
