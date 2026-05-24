@@ -1,0 +1,90 @@
+{
+    "width": 1280,
+    "height": 850,
+    "pages": [],
+    "page_layouts": {
+        "dashboard": [],
+        "warrior": [
+            "wari_seriskill",
+            "wari_des",
+            "wari_kafa",
+            "wari_kalkan",
+            "wari_silme",
+            "firfir",
+            "crazydes",
+            "birli"
+        ],
+        "asas": [
+            "asas",
+            "styx",
+            "otobicak",
+            "minor",
+            "m20",
+            "otocure",
+            "otodef",
+            "oto_explore",
+            "birli"
+        ],
+        "okcu": [
+            "threefive",
+            "icemlr",
+            "ok72",
+            "minor",
+            "m20",
+            "otocure",
+            "otodef",
+            "oto_explore",
+            "birli"
+        ],
+        "pot": [
+            "hpmp",
+            "otodurat",
+            "itemchange"
+        ],
+        "self": [
+            "self_macro_1",
+            "self_macro_2",
+            "self_macro_3",
+            "oto_kontrol",
+            "ototiklama",
+            "macro_tasarimci"
+        ],
+        "priest": [
+            "priest_goat",
+            "priest_attack",
+            "priest_skiller",
+            "priest_kalkan",
+            "priest_hpmp_heal",
+            "priest_party_heal"
+        ],
+        "mage": [
+            "mage_staff",
+            "restore",
+            "mage_remote_farm",
+            "mage_oto_tp",
+            "mage_pt_cekme",
+            "mage_text_tp"
+        ],
+        "kurian": [
+            "kurian_attack"
+        ],
+        "farm": [
+            "autodrop",
+            "oto_rpr",
+            "vip_storage",
+            "clan_storage",
+            "anti_afk",
+            "farm",
+            "pet_macro"
+        ],
+        "general": [
+            "multi",
+            "background_bot",
+            "upgrade_bot",
+            "narki",
+            "usko_otologin",
+            "notification",
+            "flood_plus"
+        ]
+    }
+}

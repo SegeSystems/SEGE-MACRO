@@ -1,0 +1,35 @@
+[2026-05-24 17:20:44] [INFO    ] [app.app] Building fresh page_layouts from MODULE_REGISTRY
+[2026-05-24 17:20:44] [INFO    ] [app.app] Modules loading
+[2026-05-24 17:20:44] [INFO    ] [app.modules] Modules loaded: 55 / 55
+[2026-05-24 17:20:44] [INFO    ] [event] module.load_complete total=55 expected=55
+[2026-05-24 17:20:44] [INFO    ] [app.app] UI rebuilt with loaded modules
+[2026-05-24 21:05:38] [INFO    ] [app.app] Settings loaded
+[2026-05-24 21:05:38] [INFO    ] [app.app] Modules loading
+[2026-05-24 21:05:40] [INFO    ] [app.modules] Modules loaded: 55 / 55
+[2026-05-24 21:05:40] [INFO    ] [event] module.load_complete total=55 expected=55
+[2026-05-24 21:05:41] [INFO    ] [app.app] UI rebuilt with loaded modules
+[2026-05-24 21:06:02] [INFO    ] [app.app] Settings loaded
+[2026-05-24 21:06:02] [INFO    ] [app.app] Modules loading
+[2026-05-24 21:06:03] [INFO    ] [app.modules] Modules loaded: 55 / 55
+[2026-05-24 21:06:03] [INFO    ] [event] module.load_complete total=55 expected=55
+[2026-05-24 21:06:03] [INFO    ] [app.app] UI rebuilt with loaded modules
+[2026-05-24 21:06:24] [INFO    ] [app.app] Settings loaded
+[2026-05-24 21:06:24] [INFO    ] [app.app] Modules loading
+[2026-05-24 21:06:25] [INFO    ] [app.modules] Modules loaded: 55 / 55
+[2026-05-24 21:06:25] [INFO    ] [event] module.load_complete total=55 expected=55
+[2026-05-24 21:06:25] [INFO    ] [app.app] UI rebuilt with loaded modules
+[2026-05-24 21:07:28] [INFO    ] [app.app] Settings loaded
+[2026-05-24 21:07:28] [INFO    ] [app.app] Modules loading
+[2026-05-24 21:07:29] [INFO    ] [app.modules] Modules loaded: 55 / 55
+[2026-05-24 21:07:29] [INFO    ] [event] module.load_complete total=55 expected=55
+[2026-05-24 21:07:29] [INFO    ] [app.app] UI rebuilt with loaded modules
+[2026-05-24 21:17:37] [INFO    ] [app.app] Settings loaded
+[2026-05-24 21:17:37] [INFO    ] [app.app] Modules loading
+[2026-05-24 21:17:37] [INFO    ] [app.modules] Modules loaded: 55 / 55
+[2026-05-24 21:17:37] [INFO    ] [event] module.load_complete total=55 expected=55
+[2026-05-24 21:17:37] [INFO    ] [app.app] UI rebuilt with loaded modules
+[2026-05-24 21:52:25] [INFO    ] [app.app] Settings loaded
+[2026-05-24 21:52:25] [INFO    ] [app.app] Modules loading
+[2026-05-24 21:52:26] [INFO    ] [app.modules] Modules loaded: 55 / 55
+[2026-05-24 21:52:26] [INFO    ] [event] module.load_complete total=55 expected=55
+[2026-05-24 21:52:26] [INFO    ] [app.app] UI rebuilt with loaded modules

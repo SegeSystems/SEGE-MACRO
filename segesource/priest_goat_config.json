@@ -1,0 +1,24 @@
+{
+    "hotkey": "F",
+    "attack_key": 2,
+    "hp_key": 1,
+    "mana_key": 3,
+    "kitap_enabled": false,
+    "kitap_key": 8,
+    "kitap_delay": 180.0,
+    "kol_enabled": false,
+    "kol_key": 9,
+    "kol_delay": 180.0,
+    "inv_coords": [
+        0,
+        0
+    ],
+    "mouse_return": false,
+    "inv_auto_open": false,
+    "other_skill_delay": 0.5,
+    "manual_attack_delay": 0.2,
+    "r_speed": 0.02,
+    "skill_speed": 0.05,
+    "inv_mode_open": false,
+    "combo_mode": "2rr"
+}
