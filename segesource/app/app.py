@@ -1368,11 +1368,40 @@ class SegeMainWindow(QMainWindow):
         self.lbl_hud_st.setStyleSheet(f"color: {'#00ff00' if self.is_hud_running else '#ff1744'}; font-weight: bold; font-size: 11pt; margin-top: 5px;")
 
     def open_hud_settings(self):
+        # FIX: HUD görünüm ayarları akışındaki 3 bug birden duzeltiliyor:
+        #   1) Modul yuklenmemisse kullaniciya soyle (sessiz return yerine)
+        #   2) Secimler diske yazilsin (save_settings_to_json) — yoksa program
+        #      kapaninca kayboluyor
+        #   3) HUD penceresi acikken anında refresh — yoksa kullanici tekrar
+        #      ac/kapa yapmadan degisikligi gormez
         if not HUDSettingsDialog:
+            from PyQt5.QtWidgets import QMessageBox
+            QMessageBox.warning(
+                self, "HUD Modulu Yok",
+                "shared/hud.py yuklenememis — HUD ayarlari acilamiyor.\n"
+                "PyQt5 kurulu mu? Import hatalari icin log dosyasini kontrol et."
+            )
             return
         d = HUDSettingsDialog(self, self.config["hud_settings"], self.MODULE_REGISTRY)
         if d.exec_():
             self.config["hud_settings"] = d.result_config
+            # 1) Diske yaz — kalıcı olsun
+            try:
+                self.save_settings_to_json()
+            except Exception as e:
+                log.error("HUD ayarlari kaydedilemedi: %s", e, exc_info=True)
+            # 2) Acik HUD'a anında yansıt
+            if self.is_hud_running and self.hud_window:
+                try:
+                    self.hud_window.update_hud_data(self)
+                except Exception as e:
+                    log.error("HUD live refresh fail: %s", e, exc_info=True)
+            # 3) Status bar feedback
+            visible_count = len(d.result_config.get("visible_macros", []))
+            try:
+                self.log_status(f"HUD gorunum ayarlari kaydedildi ({visible_count} makro secildi).")
+            except Exception:
+                pass
 
     def nudge_window(self):
         original_pos = self.pos()
