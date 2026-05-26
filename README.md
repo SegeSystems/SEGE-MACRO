@@ -32,7 +32,7 @@ Tam Türkçe dokümantasyon için [README_TR.md](README_TR.md), İngilizce için
 
 > _Place a screenshot of the main window at `assets/screenshot.png`._
 
-![SEGE Open Source — main window](assets/screenshot.png)
+![SEGE Open Source — main window](assets/sege.gif)
 
 ---
 
