@@ -207,7 +207,11 @@ class _DetectThread(QThread):
 
             while not self._stop:
                 dev = ctx.wait(milliseconds=200)
-                if not dev:
+                # FIX #68 (Win7): Eskiden `if not dev: continue` kullaniliyordu
+                # ama interception.wait() slot 0 sinyali icin de 0 donuyor →
+                # slot 0'a dusen klavyeler hicbir zaman algilanmiyordu (Win7'de
+                # cok yaygin). interception.py artik fail/timeout = -1 donuyor.
+                if dev < 0:
                     continue
                 try:
                     stroke = ctx.receive(dev)
