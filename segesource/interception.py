@@ -30,9 +30,16 @@ class interception():
     def wait(self, milliseconds=-1):
         # FIX #67: WAIT_FAILED = 0xFFFFFFFF, WAIT_TIMEOUT = 0x102. Python'da
         # -1 döndürmez; dead check yerine gerçek sabitleri kontrol et.
+        # FIX #68 (Win7): Eskiden hata/timeout icin 0 donuyordu — ama
+        # WAIT_OBJECT_0 da (slot 0 klavyesi sinyali) 0 donuyor → caller
+        # `if not dev: continue` ile slot 0'i "bos" sayiyordu, klavyesi
+        # slot 0'a dusen kullanicilarda (Win7'de yaygin) id_bul hicbir
+        # tusa cevap vermiyordu. Artik fail/timeout = -1, gercek slot
+        # index'i 0..19 = signaled. Caller `if dev < 0: continue`
+        # kullanmali.
         result = k32.WaitForMultipleObjects(MAX_DEVICES, self._c_events, 0, milliseconds)
         if result == 0xFFFFFFFF or result == 0x102:
-            return 0
+            return -1
         return result
     
     def set_filter(self,predicate,filter):
